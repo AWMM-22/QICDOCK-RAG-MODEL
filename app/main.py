@@ -13,8 +13,9 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS - allow all origins for now
-cors_origins = settings.cors_origins if settings.cors_origins != ["*"] else ["*"]
+# CORS - force allow all origins
+print(f"CORS Origins from settings: {settings.cors_origins}")
+cors_origins = ["*"]
 print(f"CORS Origins configured: {cors_origins}")
 
 app.add_middleware(
