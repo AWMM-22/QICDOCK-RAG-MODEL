@@ -197,7 +197,7 @@ function App() {
             placeholder={history.length === 0 ? "Ask about products, policies, shipping..." : "Type a message..."}
             rows={1}
             disabled={loading}
-            ref={(el) => { if (el) el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }}
+            ref={(el) => { if (el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; } }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
