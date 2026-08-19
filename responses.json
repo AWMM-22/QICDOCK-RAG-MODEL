@@ -1,0 +1,26 @@
+[
+  {
+    "question": "What is the price of the Mahindra XUV 3XO wireless charger?",
+    "intent": "PRODUCT",
+    "sources": 5,
+    "answer": "The Mahindra XUV 3XO wireless charger is priced at **₹2,349**."
+  },
+  {
+    "question": "What is your return policy?",
+    "intent": "ORGANIZATION",
+    "sources": 1,
+    "answer": "**Return Policy**\n\n- Returns are accepted within **7 days** of delivery.  \n- The product must be **unused**, in its **original packaging**, and include **all accessories**.  \n- The refund will be issued to the **original payment method** within **5–7 business days** after we receive the returned item.  \n- The customer is responsible for the **return shipping cost** unless the product is defective."
+  },
+  {
+    "question": "Which charger for Toyota Glanza?",
+    "intent": "PRODUCT",
+    "sources": 5,
+    "answer": "The charger designed for the Toyota Glanza is the **Toyota Glanza Wireless Phone Charger | Charging Pad** (SKU: QCD‑GLANZA‑002)."
+  },
+  {
+    "question": "What is the warranty on your products?",
+    "intent": "MULTI",
+    "sources": 1,
+    "answer": "The warranty on QICDOCK wireless chargers is **6 months** from the date of purchase. It covers manufacturing defects only and does **not** cover damage caused by misuse, accidents, or unauthorized modifications. To file a warranty claim, you’ll need to provide proof of purchase and the product’s serial number."
+  }
+]

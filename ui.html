@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QICDOCK RAG Chatbot - Test UI</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: #1a1a2e;
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        header p {
+            color: #888;
+            margin-top: 4px;
+        }
+        .chat-container {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .input-group {
+            display: flex;
+            gap: 12px;
+        }
+        .input-group textarea {
+            flex: 1;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+        }
+        .input-group textarea:focus {
+            border-color: #1a1a2e;
+        }
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #1a1a2e;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0f0f1a;
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        .response {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .response.error {
+            background: #fff0f0;
+            border-color: #ffcccc;
+            color: #cc0000;
+        }
+        .meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+        .meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .loading {
+            display: none;
+            color: #666;
+        }
+        .loading.active {
+            display: block;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ddd;
+            border-top-color: #1a1a2e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .samples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .sample-btn {
+            padding: 6px 12px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sample-btn:hover {
+            background: #1a1a2e;
+            color: white;
+            border-color: #1a1a2e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>QICDOCK RAG Chatbot</h1>
+            <p>Test the chatbot with custom queries</p>
+        </header>
+        <div class="chat-container">
+            <div class="samples">
+                <button class="sample-btn" onclick="setQuery('What products does QICDOCK offer?')">List Products</button>
+                <button class="sample-btn" onclick="setQuery('What is the price of Universal charger?')">Price Query</button>
+                <button class="sample-btn" onclick="setQuery('What is the MRP of Toyota Taisor charger?')">MRP Query</button>
+                <button class="sample-btn" onclick="setQuery('What is the return policy?')">Policy Query</button>
+                <button class="sample-btn" onclick="setQuery('Contact information for QICDOCK')">Contact Info</button>
+            </div>
+            <div class="input-group">
+                <textarea id="queryInput" placeholder="Enter your query here..."></textarea>
+                <div class="btn-group">
+                    <button class="btn-primary" onclick="sendQuery()">
+                        <span class="spinner" id="spinner"></span>
+                        <span id="btnText">Send Query</span>
+                    </button>
+                    <button class="btn-secondary" onclick="clearAll()">Clear</button>
+                </div>
+            </div>
+            <div id="loading" class="loading">
+                <span class="spinner"></span> Processing...
+            </div>
+            <div id="response" class="response" style="display: none;"></div>
+            <div id="meta" class="meta" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/chat';
+        let sessionId = null;
+
+        function setQuery(text) {
+            document.getElementById('queryInput').value = text;
+        }
+
+        function clearAll() {
+            document.getElementById('queryInput').value = '';
+            document.getElementById('response').style.display = 'none';
+            document.getElementById('meta').style.display = 'none';
+            sessionId = null;
+        }
+
+        async function sendQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) return;
+
+            const btnText = document.getElementById('btnText');
+            const loading = document.getElementById('loading');
+            const responseDiv = document.getElementById('response');
+            const metaDiv = document.getElementById('meta');
+
+            btnText.textContent = 'Sending...';
+            loading.classList.add('active');
+            responseDiv.style.display = 'none';
+            metaDiv.style.display = 'none';
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: query, session_id: sessionId })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Request failed');
+                }
+
+                sessionId = data.session_id;
+                
+                responseDiv.textContent = data.answer;
+                responseDiv.className = 'response';
+                responseDiv.style.display = 'block';
+
+                metaDiv.innerHTML = `
+                    <span><strong>Intent:</strong> ${data.intent}</span>
+                    <span><strong>Session:</strong> ${data.session_id.slice(0,8)}...</span>
+                    <span><strong>Sources:</strong> ${data.sources.length}</span>
+                `;
+                metaDiv.style.display = 'flex';
+
+            } catch (err) {
+                responseDiv.textContent = 'Error: ' + err.message;
+                responseDiv.className = 'response error';
+                responseDiv.style.display = 'block';
+            } finally {
+                btnText.textContent = 'Send Query';
+                loading.classList.remove('active');
+            }
+        }
+
+        document.getElementById('queryInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuery();
+            }
+        });
+    </script>
+</body>
+</html>
