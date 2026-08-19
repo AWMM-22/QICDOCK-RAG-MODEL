@@ -13,13 +13,22 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# CORS - allow all origins for now
+cors_origins = settings.cors_origins if settings.cors_origins != ["*"] else ["*"]
+print(f"CORS Origins configured: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=cors_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Test endpoint to verify CORS
+@app.get("/api/cors-test")
+async def cors_test():
+    return {"message": "CORS working", "origins": cors_origins}
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(health_router)
