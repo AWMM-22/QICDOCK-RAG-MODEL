@@ -3,6 +3,8 @@ from chromadb.config import Settings as ChromaSettings
 from typing import List, Dict, Any, Optional
 from app.core.config import settings
 from app.core.logging import logger
+import shutil
+import os
 
 
 class ChromaClient:
@@ -16,11 +18,24 @@ class ChromaClient:
     
     def __init__(self):
         if self._client is None:
-            self._client = chromadb.PersistentClient(
-                path=settings.chroma_path,
-                settings=ChromaSettings(anonymized_telemetry=False)
-            )
-            logger.info(f"Initialized ChromaDB client at: {settings.chroma_path}")
+            self._init_client()
+    
+    def _init_client(self):
+        self._client = chromadb.PersistentClient(
+            path=settings.chroma_path,
+            settings=ChromaSettings(anonymized_telemetry=False)
+        )
+        logger.info(f"Initialized ChromaDB client at: {settings.chroma_path}")
+    
+    def _reset_client(self):
+        """Nuclear option: delete chroma_db and recreate client"""
+        logger.warning("Resetting ChromaDB - deleting persistent storage")
+        try:
+            if os.path.exists(settings.chroma_path):
+                shutil.rmtree(settings.chroma_path)
+        except Exception as e:
+            logger.error(f"Failed to delete chroma_db: {e}")
+        self._init_client()
     
     @property
     def client(self):
@@ -37,6 +52,8 @@ class ChromaClient:
                         self._client.delete_collection(name=name)
                     except Exception:
                         pass
+                    if attempt == 1:
+                        self._reset_client()
                     if attempt == 2:
                         logger.error(f"Failed to recover collection '{name}' after 3 attempts")
                         raise
@@ -57,6 +74,8 @@ class ChromaClient:
                         self._client.delete_collection(name=name)
                     except Exception:
                         pass
+                    if attempt == 1:
+                        self._reset_client()
                     if attempt == 2:
                         logger.error(f"Failed to recover collection '{name}' after 3 attempts")
                         raise
