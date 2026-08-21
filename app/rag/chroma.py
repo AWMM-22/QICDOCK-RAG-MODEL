@@ -27,30 +27,44 @@ class ChromaClient:
         return self._client
     
     def get_or_create_collection(self, name: str):
-        try:
-            return self._client.get_or_create_collection(name=name)
-        except KeyError as e:
-            if "'_type'" in str(e):
-                logger.warning(f"Corrupted collection metadata for '{name}', deleting and recreating...")
-                try:
-                    self._client.delete_collection(name=name)
-                except Exception:
-                    pass
+        for attempt in range(3):
+            try:
                 return self._client.get_or_create_collection(name=name)
-            raise
+            except KeyError as e:
+                if "'_type'" in str(e):
+                    logger.warning(f"Corrupted collection metadata for '{name}' (attempt {attempt + 1}/3), attempting recovery...")
+                    try:
+                        self._client.delete_collection(name=name)
+                    except Exception:
+                        pass
+                    if attempt == 2:
+                        logger.error(f"Failed to recover collection '{name}' after 3 attempts")
+                        raise
+                else:
+                    raise
+            except Exception as e:
+                if attempt == 2:
+                    raise
     
     def get_collection(self, name: str):
-        try:
-            return self._client.get_collection(name=name)
-        except KeyError as e:
-            if "'_type'" in str(e):
-                logger.warning(f"Corrupted collection metadata for '{name}', deleting and recreating...")
-                try:
-                    self._client.delete_collection(name=name)
-                except Exception:
-                    pass
-                return self._client.get_or_create_collection(name=name)
-            raise
+        for attempt in range(3):
+            try:
+                return self._client.get_collection(name=name)
+            except KeyError as e:
+                if "'_type'" in str(e):
+                    logger.warning(f"Corrupted collection metadata for '{name}' (attempt {attempt + 1}/3), attempting recovery...")
+                    try:
+                        self._client.delete_collection(name=name)
+                    except Exception:
+                        pass
+                    if attempt == 2:
+                        logger.error(f"Failed to recover collection '{name}' after 3 attempts")
+                        raise
+                else:
+                    raise
+            except Exception as e:
+                if attempt == 2:
+                    raise
     
     def list_collections(self):
         return self._client.list_collections()
