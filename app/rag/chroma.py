@@ -27,10 +27,30 @@ class ChromaClient:
         return self._client
     
     def get_or_create_collection(self, name: str):
-        return self._client.get_or_create_collection(name=name)
+        try:
+            return self._client.get_or_create_collection(name=name)
+        except KeyError as e:
+            if "'_type'" in str(e):
+                logger.warning(f"Corrupted collection metadata for '{name}', deleting and recreating...")
+                try:
+                    self._client.delete_collection(name=name)
+                except Exception:
+                    pass
+                return self._client.get_or_create_collection(name=name)
+            raise
     
     def get_collection(self, name: str):
-        return self._client.get_collection(name=name)
+        try:
+            return self._client.get_collection(name=name)
+        except KeyError as e:
+            if "'_type'" in str(e):
+                logger.warning(f"Corrupted collection metadata for '{name}', deleting and recreating...")
+                try:
+                    self._client.delete_collection(name=name)
+                except Exception:
+                    pass
+                return self._client.get_or_create_collection(name=name)
+            raise
     
     def list_collections(self):
         return self._client.list_collections()
